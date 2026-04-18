@@ -151,7 +151,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
               {product.price_sgd > 0 ? (
                 <>
                   <p className="text-3xl font-bold text-blue-600">SGD ${product.price_sgd.toFixed(2)}</p>
-                  {product.supplier !== 'ingram' && (
+                  {product.supplier === 'pax8' && (
                     <p className="text-xs text-gray-400 mt-1">per user / month</p>
                   )}
                 </>
