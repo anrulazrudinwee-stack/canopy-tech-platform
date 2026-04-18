@@ -1,128 +1,210 @@
-const dotenv = require('dotenv')
-const cron = require('node-cron')
+import dotenv from 'dotenv'
+import path from 'path'
+dotenv.config({ path: path.resolve(__dirname, '../.env') })
+import express from 'express'
+import cron from 'node-cron'
+import { createClient } from '@supabase/supabase-js'
+import { IngramSyncService } from './suppliers/ingram/sync'
+import { syncPAX8Products } from './suppliers/pax8/sync'
 
-dotenv.config()
+const app = express()
+const PORT = process.env.PORT || 3001
 
-console.log('🚀 Data ingestion service starting...')
+// Middleware
+app.use(express.json())
 
-// Run sync immediately on startup
-syncAllSuppliers()
+// Initialize Supabase
+const supabase = createClient(
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+)
 
-// Schedule: Every 6 hours
-cron.schedule('0 */6 * * *', () => {
-  console.log('⏰ Scheduled sync triggered')
-  syncAllSuppliers()
+// Ingram Micro credentials
+const INGRAM_CLIENT_ID = process.env.INGRAM_CLIENT_ID || ''
+const INGRAM_CLIENT_SECRET = process.env.INGRAM_CLIENT_SECRET || ''
+const INGRAM_SANDBOX = process.env.INGRAM_SANDBOX !== 'false'
+
+// PAX8 MCP Token
+const PAX8_MCP_TOKEN = process.env.PAX8_MCP_TOKEN || ''
+
+let ingramService: IngramSyncService
+
+async function startServer() {
+  console.log('\n========================================')
+  console.log('🚀 CANOPY TECH PLATFORM - BACKEND')
+  console.log('========================================')
+  console.log(`Server: http://localhost:${PORT}`)
+  console.log(`Health: http://localhost:${PORT}/health`)
+  console.log(`Manual Sync: POST http://localhost:${PORT}/api/sync`)
+  console.log('========================================\n')
+
+  // Initialize Ingram Micro service
+  try {
+    ingramService = new IngramSyncService(
+      INGRAM_CLIENT_ID,
+      INGRAM_CLIENT_SECRET,
+      INGRAM_SANDBOX
+    )
+    console.log('✅ Ingram Micro service initialized')
+  } catch (error) {
+    console.error('❌ Failed to initialize Ingram Micro service:', error)
+  }
+
+  // Check PAX8 MCP token
+  if (PAX8_MCP_TOKEN) {
+    console.log('✅ PAX8 MCP token configured')
+  } else {
+    console.warn('⚠️  PAX8 MCP token not found in .env')
+  }
+
+  console.log('\n⏰ Setting up cron jobs...\n')
+
+  // Schedule PAX8 sync every 6 hours
+  cron.schedule('0 */6 * * *', async () => {
+    console.log('\n[CRON] Triggered: PAX8 sync (6-hour schedule)')
+    await runPAX8Sync()
+  })
+
+  console.log('✅ PAX8 Sync: Every 6 hours (0 */6 * * *)')
+  console.log('   Next runs: 00:00, 06:00, 12:00, 18:00 daily')
+
+  // Run initial PAX8 sync after 30 seconds
+  console.log('\n🔄 Initial PAX8 sync will run in 30 seconds...\n')
+  setTimeout(async () => {
+    await runPAX8Sync()
+  }, 30000)
+
+  console.log('========================================\n')
+
+  // Start Express server
+  app.listen(PORT, () => {
+    console.log(`✅ Server started on port ${PORT}\n`)
+  })
+}
+
+async function runPAX8Sync() {
+  try {
+    await syncPAX8Products()
+  } catch (error) {
+    console.error('❌ PAX8 sync error:', error)
+  }
+}
+
+async function runIngramSync() {
+  try {
+    if (!INGRAM_CLIENT_ID || !INGRAM_CLIENT_SECRET) {
+      console.log('⚠️  Ingram Micro credentials not configured. Skipping sync.')
+      return
+    }
+
+    await ingramService.fullSync()
+  } catch (error) {
+    console.error('❌ Ingram Micro sync error:', error)
+  }
+}
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'Canopy Tech Platform Backend',
+    timestamp: new Date().toISOString()
+  })
 })
 
-console.log('✓ Service running. Syncing every 6 hours.')
+// Get sync status
+app.get('/api/sync/status', (req, res) => {
+  res.json({
+    pax8: {
+      enabled: !!PAX8_MCP_TOKEN,
+      method: 'MCP',
+      schedule: 'Every 6 hours',
+      nextRuns: '00:00, 06:00, 12:00, 18:00 daily'
+    },
+    ingram: {
+      enabled: !!(INGRAM_CLIENT_ID && INGRAM_CLIENT_SECRET),
+      status: 'Awaiting app approval',
+      method: 'OAuth 2.0'
+    },
+    innovix: {
+      enabled: false,
+      status: 'No public API available'
+    }
+  })
+})
 
+// Manual sync trigger - PAX8
+app.post('/api/sync/pax8', async (req, res) => {
+  try {
+    console.log('[API] Manual PAX8 sync triggered')
+    
+    // Run sync in background
+    runPAX8Sync()
+      .then(() => console.log('[API] Manual PAX8 sync completed'))
+      .catch(error => console.error('[API] Manual PAX8 sync failed:', error))
+
+    res.json({ 
+      success: true, 
+      message: 'PAX8 sync started in background' 
+    })
+  } catch (error: any) {
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    })
+  }
+})
+
+// Manual sync trigger - Ingram
+app.post('/api/sync/ingram', async (req, res) => {
+  try {
+    console.log('[API] Manual Ingram sync triggered')
+    
+    runIngramSync()
+      .then(() => console.log('[API] Manual Ingram sync completed'))
+      .catch(error => console.error('[API] Manual Ingram sync failed:', error))
+
+    res.json({ 
+      success: true, 
+      message: 'Ingram sync started in background' 
+    })
+  } catch (error: any) {
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    })
+  }
+})
+
+// Manual sync trigger - All suppliers
+app.post('/api/sync', async (req, res) => {
+  try {
+    console.log('[API] Manual sync triggered (all suppliers)')
+    
+    runPAX8Sync().catch(console.error)
+    runIngramSync().catch(console.error)
+
+    res.json({ 
+      success: true, 
+      message: 'Sync started for all configured suppliers' 
+    })
+  } catch (error: any) {
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    })
+  }
+})
+
+// Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('Shutting down...')
+  console.log('\n🛑 Server shutting down...')
   process.exit(0)
 })
 
-async function syncAllSuppliers() {
-  const { createClient } = require('@supabase/supabase-js')
-  
-  console.log('Starting supplier sync...')
-  
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
+process.on('SIGTERM', () => {
+  console.log('\n🛑 Server shutting down...')
+  process.exit(0)
+})
 
-  // Innovix
-  try {
-    const innovixProducts = [
-      {
-        sku: 'DELL-XPS13',
-        name: 'Dell XPS 13 Laptop',
-        price_sgd: 1800,
-        stock_qty: 10,
-        description: 'High-performance ultrabook',
-        supplier: 'innovix'
-      },
-      {
-        sku: 'CISCO-SWITCH',
-        name: 'Cisco Catalyst 9200 Switch',
-        price_sgd: 5000,
-        stock_qty: 5,
-        description: 'Enterprise network switch',
-        supplier: 'innovix'
-      }
-    ]
-
-    const { error: err1 } = await supabase
-      .from('products')
-      .upsert(innovixProducts, { onConflict: 'sku,supplier' })
-
-    if (err1) throw err1
-    console.log(`✓ Synced ${innovixProducts.length} products from Innovix`)
-  } catch (err) {
-    console.error('Innovix sync failed', err)
-  }
-
-  // Ingram Micro
-  try {
-    const ingramProducts = [
-      {
-        sku: 'HP-ELITEBOOK',
-        name: 'HP EliteBook 15',
-        price_sgd: 2200,
-        stock_qty: 5,
-        description: 'Business laptop',
-        supplier: 'ingram'
-      },
-      {
-        sku: 'NETAPP-STORAGE',
-        name: 'NetApp AFF A220',
-        price_sgd: 15000,
-        stock_qty: 1,
-        description: 'Enterprise storage',
-        supplier: 'ingram'
-      }
-    ]
-
-    const { error: err2 } = await supabase
-      .from('products')
-      .upsert(ingramProducts, { onConflict: 'sku,supplier' })
-
-    if (err2) throw err2
-    console.log(`✓ Synced ${ingramProducts.length} products from Ingram`)
-  } catch (err) {
-    console.error('Ingram sync failed', err)
-  }
-
-  // PAX8
-  try {
-    const pax8Products = [
-      {
-        sku: 'LENOVO-X1',
-        name: 'Lenovo ThinkPad X1',
-        price_sgd: 2100,
-        stock_qty: 8,
-        description: 'Professional laptop',
-        supplier: 'pax8'
-      },
-      {
-        sku: 'VMWARE-LICENSE',
-        name: 'VMware vSphere 8',
-        price_sgd: 3500,
-        stock_qty: 20,
-        description: 'Virtualization',
-        supplier: 'pax8'
-      }
-    ]
-
-    const { error: err3 } = await supabase
-      .from('products')
-      .upsert(pax8Products, { onConflict: 'sku,supplier' })
-
-    if (err3) throw err3
-    console.log(`✓ Synced ${pax8Products.length} products from PAX8`)
-  } catch (err) {
-    console.error('PAX8 sync failed', err)
-  }
-
-  console.log('Sync complete!')
-}
+startServer().catch(console.error)
