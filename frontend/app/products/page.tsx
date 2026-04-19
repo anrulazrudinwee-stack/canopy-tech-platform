@@ -2,28 +2,20 @@
 import { useEffect, useState } from 'react'
 
 // Starting price for usage-based products (USD SRP, converted at 1.35)
-// Shows the lowest / most representative entry rate for each SKU
 const USAGE_FROM: Record<string, { from: number; unit: string; tiered?: boolean }> = {
-  'ACR-BUP-ACM-C100': { from: 1.86,  unit: 'workload / mo',  tiered: true  }, // Mobile (cheapest workload)
-  'CRD-MSP-DEF-C099': { from: 9.71,  unit: 'endpoint / mo'                  },
-  'CRD-MSP-DEF-C100': { from: 15.41, unit: 'endpoint / mo'                  },
-  'CRD-MSP-FAL-C100': { from: 24.82, unit: 'endpoint / mo'                  },
-  'CRW-STR-DSC-A100': { from: 2.3523, unit: 'endpoint / mo',  tiered: true  },
-  'CRW-STR-SAA-A100': { from: 3.83,  unit: 'endpoint / mo',  tiered: true  },
-  'CWD-DPT-ADD-A100': { from: 2.64,  unit: 'user / mo'                      },
-  'CRW-MOB-ADD-A100': { from: 3.28,  unit: 'user / mo'                      },
-  'CRW-NGS-ADD-A100': { from: 290,   unit: 'GB / mo'                        },
-}
-
-const SUPPLIER_LABELS: Record<string, string> = {
-  all:      'All Suppliers',
-  pax8:     'PAX8',
-  ingram:   'Ingram Micro',
-  techdata: 'Tech Data',
+  'ACR-BUP-ACM-C100': { from: 1.86,   unit: 'workload / mo', tiered: true  },
+  'CRD-MSP-DEF-C099': { from: 9.71,   unit: 'endpoint / mo'                },
+  'CRD-MSP-DEF-C100': { from: 15.41,  unit: 'endpoint / mo'                },
+  'CRD-MSP-FAL-C100': { from: 24.82,  unit: 'endpoint / mo'                },
+  'CRW-STR-DSC-A100': { from: 2.3523, unit: 'endpoint / mo', tiered: true  },
+  'CRW-STR-SAA-A100': { from: 3.83,   unit: 'endpoint / mo', tiered: true  },
+  'CWD-DPT-ADD-A100': { from: 2.64,   unit: 'user / mo'                    },
+  'CRW-MOB-ADD-A100': { from: 3.28,   unit: 'user / mo'                    },
+  'CRW-NGS-ADD-A100': { from: 290,    unit: 'GB / mo'                      },
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  all:      'All Categories',
+  all:      'All',
   Desktop:  'Desktops',
   Laptop:   'Laptops',
   Printer:  'Printers',
@@ -31,12 +23,29 @@ const CATEGORY_LABELS: Record<string, string> = {
   software: 'Cloud & Software',
 }
 
+// Extract brand name from Clearbit image URL
+function getBrand(imageUrl: string): string {
+  if (!imageUrl) return 'Other'
+  const match = imageUrl.match(/clearbit\.com\/(.+)$/)
+  if (!match) return 'Other'
+  const domain = match[1]
+  const brandMap: Record<string, string> = {
+    'dell.com': 'Dell', 'hp.com': 'HP', 'lenovo.com': 'Lenovo',
+    'canon.com': 'Canon', 'synology.com': 'Synology',
+    'microsoft.com': 'Microsoft', 'acronis.com': 'Acronis', 'crowdstrike.com': 'CrowdStrike',
+  }
+  return brandMap[domain] ?? domain
+}
+
+// Hardware categories that get brand grouping
+const HARDWARE_CATEGORIES = ['Desktop', 'Laptop', 'Printer', 'NAS']
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [supplier, setSupplier] = useState('all')
   const [category, setCategory] = useState('all')
+  const [brand, setBrand] = useState('all')
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -48,19 +57,44 @@ export default function ProductsPage() {
     fetchProducts()
   }, [])
 
-  // Derive available suppliers and categories from product data
-  const suppliers = ['all', ...Array.from(new Set(products.map(p => p.supplier))).sort()]
   const rawCategories = Array.from(new Set(products.map(p => p.category || 'software'))).sort()
   const categories = ['all', ...rawCategories]
 
-  const filtered = products.filter(p => {
+  const isHardwareCategory = HARDWARE_CATEGORIES.includes(category)
+
+  // Products filtered by category + search (before brand filter)
+  const categoryFiltered = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.description?.toLowerCase().includes(search.toLowerCase())
-    const matchesSupplier = supplier === 'all' || p.supplier === supplier
     const productCategory = p.category || 'software'
     const matchesCategory = category === 'all' || productCategory === category
-    return matchesSearch && matchesSupplier && matchesCategory
+    return matchesSearch && matchesCategory
   })
+
+  // Available brands for the selected category
+  const brands = Array.from(new Set(categoryFiltered.map(p => getBrand(p.image_url)))).sort()
+
+  // Final filtered list (also applies brand filter)
+  const filtered = categoryFiltered.filter(p =>
+    brand === 'all' || getBrand(p.image_url) === brand
+  )
+
+  // Reset brand when category changes
+  function handleCategoryChange(c: string) {
+    setCategory(c)
+    setBrand('all')
+  }
+
+  // Group products by brand (for hardware categories)
+  const grouped: Record<string, typeof products> = {}
+  if (isHardwareCategory && brand === 'all' && !search) {
+    for (const p of filtered) {
+      const b = getBrand(p.image_url)
+      if (!grouped[b]) grouped[b] = []
+      grouped[b].push(p)
+    }
+  }
+  const showGrouped = isHardwareCategory && brand === 'all' && !search && Object.keys(grouped).length > 0
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center text-gray-500">Loading products...</div>
@@ -79,139 +113,190 @@ export default function ProductsPage() {
 
       <div className="max-w-6xl mx-auto px-6 py-8">
 
-        {/* Filters */}
-        <div className="space-y-3 mb-8">
-          {/* Search */}
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full border rounded-lg px-4 py-2.5 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
 
-          {/* Supplier filter */}
-          <div className="flex flex-wrap gap-2">
-            {suppliers.map(s => (
-              <button
-                key={s}
-                onClick={() => setSupplier(s)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                  supplier === s
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
-                }`}
-              >
-                {SUPPLIER_LABELS[s] ?? s}
-              </button>
-            ))}
-          </div>
-
-          {/* Category filter */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map(c => (
-              <button
-                key={c}
-                onClick={() => setCategory(c)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                  category === c
-                    ? 'bg-gray-800 text-white border-gray-800'
-                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
-                }`}
-              >
-                {CATEGORY_LABELS[c] ?? c}
-              </button>
-            ))}
-          </div>
+        {/* Category tabs */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {categories.map(c => (
+            <button
+              key={c}
+              onClick={() => handleCategoryChange(c)}
+              className={`px-5 py-2 rounded-full text-sm font-medium border transition-colors ${
+                category === c
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+              }`}
+            >
+              {CATEGORY_LABELS[c] ?? c}
+            </button>
+          ))}
         </div>
+
+        {/* Brand cards — shown for hardware categories when no brand selected and no search */}
+        {isHardwareCategory && !search && brands.length > 1 && (
+          <div className="flex flex-wrap gap-3 mb-8">
+            {(['all', ...brands]).map(b => {
+              const count = b === 'all' ? categoryFiltered.length : categoryFiltered.filter(p => getBrand(p.image_url) === b).length
+              const sampleProduct = b === 'all' ? null : categoryFiltered.find(p => getBrand(p.image_url) === b)
+              return (
+                <button
+                  key={b}
+                  onClick={() => setBrand(b)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
+                    brand === b
+                      ? 'border-blue-500 bg-blue-50 shadow-sm'
+                      : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-sm'
+                  }`}
+                >
+                  {b === 'all' ? (
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <span className="text-gray-500 text-xs font-bold">ALL</span>
+                    </div>
+                  ) : sampleProduct?.image_url ? (
+                    <div className="w-8 h-8 bg-gray-50 border rounded-lg flex items-center justify-center p-1">
+                      <img
+                        src={sampleProduct.image_url}
+                        alt={b}
+                        className="w-full h-full object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                    </div>
+                  ) : null}
+                  <div className="text-left">
+                    <p className={`text-sm font-semibold ${brand === b ? 'text-blue-700' : 'text-gray-800'}`}>
+                      {b === 'all' ? 'All Brands' : b}
+                    </p>
+                    <p className="text-xs text-gray-400">{count} {count === 1 ? 'product' : 'products'}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="text-center py-20 text-gray-400">No products match your search.</div>
         )}
 
-        {/* Product grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map(product => {
-            const productCategory = product.category || 'software'
-            const isHardware = product.supplier !== 'pax8'
-            return (
-              <a
-                key={product.id}
-                href={`/products/${product.id}`}
-                className="bg-white border rounded-xl p-5 hover:shadow-md hover:border-blue-300 transition-all group block"
-              >
-                {/* Vendor logo + supplier badge */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-gray-50 border rounded-lg flex items-center justify-center p-1.5">
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.supplier}
-                        className="w-full h-full object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                      />
-                    ) : (
-                      <span className="text-lg">📦</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {product.category && (
-                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                        {CATEGORY_LABELS[product.category] ?? product.category}
-                      </span>
-                    )}
-                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                      {SUPPLIER_LABELS[product.supplier] ?? product.supplier}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Name */}
-                <h2 className="font-semibold text-gray-900 text-sm leading-snug mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
-                  {product.name}
-                </h2>
-
-                {/* Description */}
-                <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-4">
-                  {product.description}
-                </p>
-
-                {/* Price */}
-                <div className="flex items-end justify-between mt-auto pt-4 border-t">
-                  {product.price_sgd > 0 ? (
-                    <div>
-                      <p className="text-lg font-bold text-gray-900">SGD ${product.price_sgd.toFixed(2)}</p>
-                      {!isHardware && (
-                        <p className="text-xs text-gray-400">per user / month</p>
-                      )}
-                    </div>
-                  ) : (() => {
-                    const usage = USAGE_FROM[product.sku]
-                    if (usage) {
-                      const sgd = (usage.from * 1.35).toFixed(2)
-                      return (
-                        <div>
-                          <p className="text-base font-bold text-gray-900">
-                            {usage.tiered ? 'From ' : ''}SGD ${sgd}
-                          </p>
-                          <p className="text-xs text-gray-400">per {usage.unit}{usage.tiered ? ' · volume discounts' : ''}</p>
-                        </div>
-                      )
-                    }
-                    return (
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Contact us</p>
-                        <p className="text-xs text-gray-400">for pricing</p>
+        {/* Grouped by brand (hardware, no brand selected, no search) */}
+        {showGrouped && (
+          <div className="space-y-10">
+            {Object.entries(grouped).map(([brandName, brandProducts]) => {
+              const sampleProduct = brandProducts[0]
+              return (
+                <div key={brandName}>
+                  {/* Brand section header */}
+                  <div className="flex items-center gap-3 mb-4">
+                    {sampleProduct?.image_url && (
+                      <div className="w-9 h-9 bg-white border rounded-xl flex items-center justify-center p-1.5 shadow-sm">
+                        <img
+                          src={sampleProduct.image_url}
+                          alt={brandName}
+                          className="w-full h-full object-contain"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        />
                       </div>
-                    )
-                  })()}
-                  <span className="text-xs text-blue-600 font-medium group-hover:underline">View details →</span>
+                    )}
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">{brandName}</h2>
+                      <p className="text-xs text-gray-400">{brandProducts.length} {brandProducts.length === 1 ? 'product' : 'products'}</p>
+                    </div>
+                  </div>
+
+                  {/* Product cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {brandProducts.map(product => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
                 </div>
-              </a>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Flat grid (all categories, or brand selected, or search active) */}
+        {!showGrouped && filtered.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filtered.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
+  )
+}
+
+function ProductCard({ product }: { product: any }) {
+  const isHardware = product.supplier !== 'pax8'
+  const usage = USAGE_FROM[product.sku]
+
+  return (
+    <a
+      href={`/products/${product.id}`}
+      className="bg-white border rounded-xl p-5 hover:shadow-md hover:border-blue-300 transition-all group block"
+    >
+      {/* Logo + category badge */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="w-10 h-10 bg-gray-50 border rounded-lg flex items-center justify-center p-1.5">
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt={getBrand(product.image_url)}
+              className="w-full h-full object-contain"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+            />
+          ) : (
+            <span className="text-lg">📦</span>
+          )}
+        </div>
+        {product.category && (
+          <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+            {CATEGORY_LABELS[product.category] ?? product.category}
+          </span>
+        )}
+      </div>
+
+      {/* Name */}
+      <h2 className="font-semibold text-gray-900 text-sm leading-snug mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+        {product.name}
+      </h2>
+
+      {/* Description */}
+      <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-4">
+        {product.description}
+      </p>
+
+      {/* Price */}
+      <div className="flex items-end justify-between mt-auto pt-4 border-t">
+        {product.price_sgd > 0 ? (
+          <div>
+            <p className="text-lg font-bold text-gray-900">SGD ${product.price_sgd.toFixed(2)}</p>
+            {!isHardware && <p className="text-xs text-gray-400">per user / month</p>}
+          </div>
+        ) : usage ? (
+          <div>
+            <p className="text-base font-bold text-gray-900">
+              {usage.tiered ? 'From ' : ''}SGD ${(usage.from * 1.35).toFixed(2)}
+            </p>
+            <p className="text-xs text-gray-400">per {usage.unit}{usage.tiered ? ' · volume discounts' : ''}</p>
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm font-medium text-gray-500">Contact us</p>
+            <p className="text-xs text-gray-400">for pricing</p>
+          </div>
+        )}
+        <span className="text-xs text-blue-600 font-medium group-hover:underline">View details →</span>
+      </div>
+    </a>
   )
 }
