@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('products')
-    .select('*')
+    .select('id, sku, supplier, category, name, description, price_sgd, base_price_sgd, partner_price_sgd, markup_percent, stock_qty, image_url')
     .gt('stock_qty', 0)
     .order('name')
 

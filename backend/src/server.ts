@@ -6,6 +6,8 @@ import cron from 'node-cron'
 import { createClient } from '@supabase/supabase-js'
 import { IngramSyncService } from './suppliers/ingram/sync'
 import { syncPAX8Products } from './suppliers/pax8/sync'
+import { innovixLogin } from './suppliers/innovix/login'
+import { spawn } from 'child_process'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -172,6 +174,68 @@ app.post('/api/sync/ingram', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: error.message 
+    })
+  }
+})
+
+// Manual sync trigger - TP-Link via Innovix (requires PHPSESSID cookie)
+app.post('/api/sync/tplink', async (req, res) => {
+  const { session } = req.body as { session?: string }
+  if (!session || !session.trim()) {
+    res.status(400).json({ success: false, error: 'session cookie (PHPSESSID) is required' })
+    return
+  }
+
+  const scriptPath = path.resolve(__dirname, '../scrape-tplink.mjs')
+  console.log(`[API] TP-Link sync triggered with session cookie`)
+
+  const child = spawn('node', [scriptPath], {
+    env: { ...process.env, INNOVIX_SESSION: session.trim() },
+    cwd: path.resolve(__dirname, '..'),
+  })
+
+  child.stdout.on('data', (d: Buffer) => process.stdout.write('[Innovix] ' + d.toString()))
+  child.stderr.on('data', (d: Buffer) => process.stderr.write('[Innovix ERR] ' + d.toString()))
+  child.on('close', (code: number) => {
+    console.log(`[API] TP-Link sync finished with exit code ${code}`)
+  })
+
+  res.json({ success: true, message: 'TP-Link sync started — check backend console for progress' })
+})
+
+// Login to Innovix and return PHPSESSID, then auto-trigger scrape
+app.post('/api/sync/tplink/login', async (req, res) => {
+  const { username, password } = req.body as { username?: string; password?: string }
+  if (!username || !password) {
+    res.status(400).json({ success: false, error: 'username and password are required' })
+    return
+  }
+
+  try {
+    console.log(`[API] Attempting Innovix login for user: ${username}`)
+    const session = await innovixLogin(username, password)
+    console.log(`[API] Innovix login successful — got PHPSESSID`)
+
+    // Auto-trigger the scrape with the captured session
+    const scriptPath = path.resolve(__dirname, '../scrape-tplink.mjs')
+    const child = spawn('node', [scriptPath], {
+      env: { ...process.env, INNOVIX_SESSION: session },
+      cwd: path.resolve(__dirname, '..'),
+    })
+    child.stdout.on('data', (d: Buffer) => process.stdout.write('[Innovix] ' + d.toString()))
+    child.stderr.on('data', (d: Buffer) => process.stderr.write('[Innovix ERR] ' + d.toString()))
+    child.on('close', (code: number) => {
+      console.log(`[API] TP-Link auto-sync finished with exit code ${code}`)
+    })
+
+    res.json({ success: true, message: 'Login successful — TP-Link sync running in background' })
+  } catch (error: any) {
+    console.error('[API] Innovix login failed:', error.message)
+    const isCaptcha = error.message.toLowerCase().includes('recaptcha')
+    res.status(isCaptcha ? 422 : 401).json({
+      success: false,
+      captchaRequired: isCaptcha,
+      error: error.message,
     })
   }
 })

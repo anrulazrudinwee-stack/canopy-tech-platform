@@ -571,6 +571,7 @@ async function main() {
   const rows = PRODUCTS.map(p => ({
     sku: p.sku,
     supplier: p.supplier,
+    category: p.category,
     name: p.name,
     description: p.description,
     price_sgd: sgd(p.price_usd),

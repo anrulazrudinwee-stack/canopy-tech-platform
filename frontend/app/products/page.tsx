@@ -15,30 +15,44 @@ const USAGE_FROM: Record<string, { from: number; unit: string; tiered?: boolean 
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  all:      'All',
-  Desktop:  'Desktops',
-  Laptop:   'Laptops',
-  Printer:  'Printers',
-  NAS:      'NAS / Storage',
-  software: 'Cloud & Software',
+  all:        'All',
+  Desktop:    'Desktops',
+  Laptop:     'Laptops',
+  Networking: 'Networking',
+  Printer:    'Printers',
+  NAS:        'NAS / Storage',
+  software:   'Cloud & Software',
 }
 
-// Extract brand name from Clearbit image URL
-function getBrand(imageUrl: string): string {
-  if (!imageUrl) return 'Other'
-  const match = imageUrl.match(/clearbit\.com\/(.+)$/)
-  if (!match) return 'Other'
-  const domain = match[1]
-  const brandMap: Record<string, string> = {
-    'dell.com': 'Dell', 'hp.com': 'HP', 'lenovo.com': 'Lenovo',
-    'canon.com': 'Canon', 'synology.com': 'Synology',
-    'microsoft.com': 'Microsoft', 'acronis.com': 'Acronis', 'crowdstrike.com': 'CrowdStrike',
+// Extract brand name from product (image URL first, SKU prefix as fallback)
+function getBrand(imageUrl: string, sku?: string): string {
+  if (imageUrl) {
+    const match = imageUrl.match(/clearbit\.com\/(.+)$/)
+    if (match) {
+      const brandMap: Record<string, string> = {
+        'dell.com': 'Dell', 'hp.com': 'HP', 'lenovo.com': 'Lenovo',
+        'canon.com': 'Canon', 'synology.com': 'Synology', 'tp-link.com': 'TP-Link',
+        'microsoft.com': 'Microsoft', 'acronis.com': 'Acronis', 'crowdstrike.com': 'CrowdStrike',
+      }
+      return brandMap[match[1]] ?? match[1]
+    }
   }
-  return brandMap[domain] ?? domain
+  if (sku) {
+    const prefix = sku.split('-')[0].toUpperCase()
+    const skuBrandMap: Record<string, string> = {
+      'ACR': 'Acronis',
+      'CRW': 'CrowdStrike',
+      'CRD': 'CrowdStrike',
+      'CWD': 'CrowdStrike',
+      'MST': 'Microsoft',
+    }
+    if (skuBrandMap[prefix]) return skuBrandMap[prefix]
+  }
+  return 'Other'
 }
 
-// Hardware categories that get brand grouping
-const HARDWARE_CATEGORIES = ['Desktop', 'Laptop', 'Printer', 'NAS']
+// Categories that get brand grouping
+const GROUPED_CATEGORIES = ['Desktop', 'Laptop', 'Networking', 'Printer', 'NAS', 'software']
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([])
@@ -60,7 +74,7 @@ export default function ProductsPage() {
   const rawCategories = Array.from(new Set(products.map(p => p.category || 'software'))).sort()
   const categories = ['all', ...rawCategories]
 
-  const isHardwareCategory = HARDWARE_CATEGORIES.includes(category)
+  const showsBrands = GROUPED_CATEGORIES.includes(category)
 
   // Products filtered by category + search (before brand filter)
   const categoryFiltered = products.filter(p => {
@@ -72,11 +86,11 @@ export default function ProductsPage() {
   })
 
   // Available brands for the selected category
-  const brands = Array.from(new Set(categoryFiltered.map(p => getBrand(p.image_url)))).sort()
+  const brands = Array.from(new Set(categoryFiltered.map(p => getBrand(p.image_url, p.sku)))).sort()
 
   // Final filtered list (also applies brand filter)
   const filtered = categoryFiltered.filter(p =>
-    brand === 'all' || getBrand(p.image_url) === brand
+    brand === 'all' || getBrand(p.image_url, p.sku) === brand
   )
 
   // Reset brand when category changes
@@ -85,16 +99,16 @@ export default function ProductsPage() {
     setBrand('all')
   }
 
-  // Group products by brand (for hardware categories)
+  // Group products by brand
   const grouped: Record<string, typeof products> = {}
-  if (isHardwareCategory && brand === 'all' && !search) {
+  if (showsBrands && brand === 'all' && !search) {
     for (const p of filtered) {
-      const b = getBrand(p.image_url)
+      const b = getBrand(p.image_url, p.sku)
       if (!grouped[b]) grouped[b] = []
       grouped[b].push(p)
     }
   }
-  const showGrouped = isHardwareCategory && brand === 'all' && !search && Object.keys(grouped).length > 0
+  const showGrouped = showsBrands && brand === 'all' && !search && Object.keys(grouped).length > 0
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center text-gray-500">Loading products...</div>
@@ -140,11 +154,11 @@ export default function ProductsPage() {
         </div>
 
         {/* Brand cards — shown for hardware categories when no brand selected and no search */}
-        {isHardwareCategory && !search && brands.length > 1 && (
+        {showsBrands && !search && brands.length > 1 && (
           <div className="flex flex-wrap gap-3 mb-8">
             {(['all', ...brands]).map(b => {
-              const count = b === 'all' ? categoryFiltered.length : categoryFiltered.filter(p => getBrand(p.image_url) === b).length
-              const sampleProduct = b === 'all' ? null : categoryFiltered.find(p => getBrand(p.image_url) === b)
+              const count = b === 'all' ? categoryFiltered.length : categoryFiltered.filter(p => getBrand(p.image_url, p.sku) === b).length
+              const sampleProduct = b === 'all' ? null : categoryFiltered.find(p => getBrand(p.image_url, p.sku) === b)
               return (
                 <button
                   key={b}
@@ -159,10 +173,10 @@ export default function ProductsPage() {
                     <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
                       <span className="text-gray-500 text-xs font-bold">ALL</span>
                     </div>
-                  ) : sampleProduct?.image_url ? (
+                  ) : getLogoUrl(sampleProduct) ? (
                     <div className="w-8 h-8 bg-gray-50 border rounded-lg flex items-center justify-center p-1">
                       <img
-                        src={sampleProduct.image_url}
+                        src={getLogoUrl(sampleProduct)}
                         alt={b}
                         className="w-full h-full object-contain"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
@@ -194,10 +208,10 @@ export default function ProductsPage() {
                 <div key={brandName}>
                   {/* Brand section header */}
                   <div className="flex items-center gap-3 mb-4">
-                    {sampleProduct?.image_url && (
+                    {getLogoUrl(sampleProduct) && (
                       <div className="w-9 h-9 bg-white border rounded-xl flex items-center justify-center p-1.5 shadow-sm">
                         <img
-                          src={sampleProduct.image_url}
+                          src={getLogoUrl(sampleProduct)}
                           alt={brandName}
                           className="w-full h-full object-contain"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
@@ -235,9 +249,24 @@ export default function ProductsPage() {
   )
 }
 
+const SKU_LOGO: Record<string, string> = {
+  ACR: 'https://logo.clearbit.com/acronis.com',
+  CRW: 'https://logo.clearbit.com/crowdstrike.com',
+  CRD: 'https://logo.clearbit.com/crowdstrike.com',
+  CWD: 'https://logo.clearbit.com/crowdstrike.com',
+  MST: 'https://logo.clearbit.com/microsoft.com',
+}
+
+function getLogoUrl(product: any): string {
+  if (product.image_url) return product.image_url
+  const prefix = (product.sku || '').split('-')[0].toUpperCase()
+  return SKU_LOGO[prefix] || ''
+}
+
 function ProductCard({ product }: { product: any }) {
   const isHardware = product.supplier !== 'pax8'
   const usage = USAGE_FROM[product.sku]
+  const logoUrl = getLogoUrl(product)
 
   return (
     <a
@@ -247,10 +276,10 @@ function ProductCard({ product }: { product: any }) {
       {/* Logo + category badge */}
       <div className="flex items-center justify-between mb-4">
         <div className="w-10 h-10 bg-gray-50 border rounded-lg flex items-center justify-center p-1.5">
-          {product.image_url ? (
+          {logoUrl ? (
             <img
-              src={product.image_url}
-              alt={getBrand(product.image_url)}
+              src={logoUrl}
+              alt={getBrand(logoUrl, product.sku)}
               className="w-full h-full object-contain"
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
             />

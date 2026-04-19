@@ -133,6 +133,7 @@ export async function syncPAX8Products() {
           partner_price_sgd: partnerSgd,
           price_sgd:         priceSgd,
           image_url:         imageUrl,
+          category:          'software',
         })
         .eq('id', existing.id)
 

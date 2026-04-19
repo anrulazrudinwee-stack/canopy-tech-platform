@@ -381,6 +381,79 @@ function parseCanon() {
   console.log(`  Canon: ${count} products`)
 }
 
+// ─── TP-LINK ─────────────────────────────────────────────────────────────────
+// Scraped from https://www.innovixmarketplace.com (brand ID 112)
+// 22 of 41 products captured — remainder require JS rendering
+
+const TPLINK_PRODUCTS = [
+  // Switches
+  { sku: 'SG6428XHP',         name: 'TP-Link Omada 24-Port Gigabit Stackable L3 Managed PoE+ Switch with 4 10G Slots',                          price: 3799.00 },
+  { sku: 'SG3452XP',          name: 'TP-Link Omada 48-Port Gigabit and 4-Port 10GE SFP+ L2+ Managed Switch with 48-Port PoE+',                  price: 1499.00 },
+  { sku: 'SG3428XPP-M2',      name: 'TP-Link Omada 24-Port 2.5GBASE-T and 4-Port 10GE SFP+ L2+ Managed Switch with 16-Port PoE+ & 8-Port PoE++', price: 1279.00 },
+  { sku: 'SG3452P',           name: 'TP-Link Omada 52-Port Gigabit L2+ Managed Switch with 48-Port PoE+',                                       price: 1049.00 },
+  { sku: 'SG3428MP',          name: 'TP-Link Omada 28-Port Gigabit L2+ Managed Switch with 24-Port PoE+',                                       price:  699.00 },
+  { sku: 'SG3428X-M2',        name: 'TP-Link Omada JetStream 24-Port 2.5GBASE-T L2+ Managed Switch with 4 10GE SFP+ Slots',                    price:  660.00 },
+  { sku: 'SG2428P',           name: 'TP-Link Omada 28-Port Gigabit Smart Switch with 24-Port PoE+',                                             price:  549.00 },
+  { sku: 'ES228GMP',          name: 'TP-Link Omada 28-Port Gigabit Easy Managed Switch with 24-Port PoE+',                                      price:  539.00 },
+  { sku: 'SG2218P',           name: 'TP-Link Omada 18-Port Gigabit Smart Switch with 16-Port PoE+',                                             price:  479.00 },
+  { sku: 'IES210GPP',         name: 'TP-Link Omada 10-Port Gigabit Industrial Easy Managed Switch with 6-Port PoE+ and 2-Port PoE++',           price:  429.00 },
+  { sku: 'ES220GMP',          name: 'TP-Link Omada 20-Port Gigabit Easy Managed Switch with 16-Port PoE+',                                      price:  419.00 },
+  { sku: 'DS1018GMP',         name: 'TP-Link Omada 18-Port Gigabit Unmanaged Rackmount Switch with 16-Port PoE+',                               price:  349.00 },
+  { sku: 'ES210GMP',          name: 'TP-Link Omada 10-Port Gigabit Easy Managed Switch with 8-Port PoE+',                                       price:  209.00 },
+  { sku: 'IES105GPP',         name: 'TP-Link Omada 6-Port Gigabit Industrial Easy Managed Switch with 3-Port PoE+ and 1-Port PoE++',            price:  279.00 },
+  { sku: 'TL-SG2210P',        name: 'TP-Link Omada 8-Port Gigabit Smart Switch with 4-Port PoE+',                                              price:  160.00 },
+  { sku: 'TL-SG2008',         name: 'TP-Link Omada 8-Port Gigabit Smart Switch',                                                                price:  132.00 },
+  { sku: 'TL-SG1210P',        name: 'TP-Link 10-Port Gigabit Desktop Switch with 8-Port PoE+',                                                  price:  149.00 },
+  { sku: 'TL-SG105PE',        name: 'TP-Link Omada 5-Port Gigabit Easy Managed Switch with 4-Port PoE+',                                        price:   95.00 },
+  // Routers
+  { sku: 'ER8411',            name: 'TP-Link Omada ER8411 VPN Router with 10G Ports',                                                           price:  599.00 },
+  { sku: 'ER7412-M2',         name: 'TP-Link Omada ER7412-M2 Multi-Gigabit VPN Router',                                                         price:  449.00 },
+  { sku: 'ER706W-4G',         name: 'TP-Link Omada 4G+ Cat6 AX3000 Gigabit VPN Router',                                                         price:  415.00 },
+  // Access Points
+  { sku: 'EAP783',            name: 'TP-Link Omada BE19000 Ceiling Mount Tri-Band Wi-Fi 7 Access Point',                                         price: 1109.00 },
+  { sku: 'EAP773',            name: 'TP-Link Omada BE11000 Ceiling Mount Tri-Band Wi-Fi 7 Access Point',                                         price:  499.00 },
+  { sku: 'EAP772-Outdoor',    name: 'TP-Link Omada BE11000 Indoor/Outdoor Wi-Fi 7 Access Point',                                                 price:  469.00 },
+  { sku: 'EAP787',            name: 'TP-Link Omada BE15000 Ceiling Mount Tri-Band Wi-Fi 7 Access Point',                                         price:  439.00 },
+  { sku: 'EAP623-Outdoor HD', name: 'TP-Link Omada AX1800 Indoor/Outdoor Wi-Fi 6 Access Point',                                                  price:  319.00 },
+  { sku: 'EAP772',            name: 'TP-Link Omada BE11000 Ceiling Mount Wi-Fi 7 Access Point',                                                   price:  299.00 },
+  { sku: 'EAP215-Bridge KIT', name: 'TP-Link Omada Wireless Bridge 5 GHz 867 Mbps Long-Range Indoor/Outdoor Access Point',                       price:  299.00 },
+  { sku: 'EAP771',            name: 'TP-Link Omada BE5000 Ceiling Mount Wi-Fi 7 Access Point',                                                    price:  289.00 },
+  { sku: 'EAP215-Bridge',     name: 'TP-Link Omada Wireless Bridge 5 GHz 867 Mbps Indoor/Outdoor Access Point',                                   price:  249.00 },
+  { sku: 'EAP610-Outdoor',    name: 'TP-Link Omada AX1800 Indoor/Outdoor Wi-Fi 6 Access Point (Outdoor)',                                         price:  235.00 },
+  { sku: 'EAP670',            name: 'TP-Link Omada AX5400 Ceiling Mount Wi-Fi 6 Access Point',                                                    price:  185.00 },
+  { sku: 'EAP615-Wall',       name: 'TP-Link Omada AX3000 Wall Plate Wi-Fi 6 Access Point',                                                       price:  172.00 },
+  { sku: 'EAP650',            name: 'TP-Link Omada AX3000 Ceiling Mount Wi-Fi 6 Access Point',                                                    price:  159.00 },
+  { sku: 'EAP610',            name: 'TP-Link Omada AX1800 Ceiling Mount Wi-Fi 6 Access Point',                                                    price:  139.00 },
+  // Controllers & Modules
+  { sku: 'OC200',             name: 'TP-Link Omada OC200 Hardware Controller',                                                                    price:  184.00 },
+  { sku: 'TXM431-T',          name: 'TP-Link Omada 10G BASE-T RJ45 SFP+ Module',                                                                  price:  137.00 },
+  { sku: 'TL-POE300',         name: 'TP-Link Omada PoE+ Extender',                                                                                price:   79.00 },
+  // Wireless Bridges
+  { sku: 'CPE710',            name: 'TP-Link Omada Wireless Bridge 5 GHz 300 Mbps Long-Range Indoor/Outdoor Access Point',                        price:  229.00 },
+  { sku: 'CPE210',            name: 'TP-Link Omada 2.4GHz 300Mbps Indoor/Outdoor Wireless Bridge',                                                price:   99.00 },
+]
+
+function parseTPLink() {
+  for (const p of TPLINK_PRODUCTS) {
+    products.push({
+      sku: `TD-${p.sku}`,
+      supplier: 'techdata',
+      category: 'Networking',
+      name: p.name,
+      description: p.name,
+      long_description: null,
+      base_price_sgd: p.price,
+      partner_price_sgd: p.price,
+      price_sgd: p.price,
+      markup_percent: 0,
+      stock_qty: 50,
+      image_url: 'https://logo.clearbit.com/tp-link.com',
+      specs: null,
+    })
+  }
+  console.log(`  TP-Link: ${TPLINK_PRODUCTS.length} products (${TPLINK_PRODUCTS.length} of ~41 on site)`)
+}
+
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
 console.log('Parsing price lists...')
@@ -388,6 +461,7 @@ parseDell()
 parseHP()
 parseLenovo()
 parseCanon()
+parseTPLink()
 console.log(`\nTotal parsed: ${products.length} products`)
 
 // Breakdown by category
