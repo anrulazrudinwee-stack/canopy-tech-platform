@@ -81,7 +81,7 @@ function parseDell() {
       price_sgd: endUserPrice,
       markup_percent: 0,
       stock_qty: 50,
-      image_url: 'https://logo.clearbit.com/dell.com',
+      image_url: 'https://cdn.simpleicons.org/dell',
       specs: null,
     })
     count++
@@ -114,7 +114,7 @@ function parseDell() {
       price_sgd: endUserPrice,
       markup_percent: 0,
       stock_qty: 50,
-      image_url: 'https://logo.clearbit.com/dell.com',
+      image_url: 'https://cdn.simpleicons.org/dell',
       specs: null,
     })
     count++
@@ -168,7 +168,7 @@ function parseHP() {
         price_sgd: sellPrice,
         markup_percent: 0,
         stock_qty: 50,
-        image_url: 'https://logo.clearbit.com/hp.com',
+        image_url: 'https://cdn.simpleicons.org/hp',
         specs: null,
       })
       count++
@@ -208,7 +208,7 @@ function parseHP() {
         price_sgd: srp || promoPrice,
         markup_percent: 0,
         stock_qty: 50,
-        image_url: 'https://logo.clearbit.com/hp.com',
+        image_url: 'https://cdn.simpleicons.org/hp',
         specs: null,
       })
       count++
@@ -299,7 +299,7 @@ function parseLenovo() {
         price_sgd: srp || resellerPrice,
         markup_percent: 0,
         stock_qty: 50,
-        image_url: 'https://logo.clearbit.com/lenovo.com',
+        image_url: 'https://cdn.simpleicons.org/lenovo',
         specs: null,
       })
       count++
@@ -368,7 +368,7 @@ function parseCanon() {
         price_sgd: sellPrice,
         markup_percent: 0,
         stock_qty: 50,
-        image_url: 'https://logo.clearbit.com/canon.com',
+        image_url: 'https://img.icons8.com/fluency/96/print.png',
         specs: null,
       })
       count++
@@ -447,7 +447,7 @@ function parseTPLink() {
       price_sgd: p.price,
       markup_percent: 0,
       stock_qty: 50,
-      image_url: 'https://logo.clearbit.com/tp-link.com',
+      image_url: 'https://cdn.simpleicons.org/tplink',
       specs: null,
     })
   }

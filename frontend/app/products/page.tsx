@@ -27,24 +27,35 @@ const CATEGORY_LABELS: Record<string, string> = {
 // Extract brand name from product (image URL first, SKU prefix as fallback)
 function getBrand(imageUrl: string, sku?: string): string {
   if (imageUrl) {
-    const match = imageUrl.match(/clearbit\.com\/(.+)$/)
-    if (match) {
-      const brandMap: Record<string, string> = {
-        'dell.com': 'Dell', 'hp.com': 'HP', 'lenovo.com': 'Lenovo',
-        'canon.com': 'Canon', 'synology.com': 'Synology', 'tp-link.com': 'TP-Link',
-        'microsoft.com': 'Microsoft', 'acronis.com': 'Acronis', 'crowdstrike.com': 'CrowdStrike',
+    // Simple Icons CDN (dell, hp, lenovo, synology, tplink)
+    const simpleMatch = imageUrl.match(/simpleicons\.org\/([^/?]+)/)
+    if (simpleMatch) {
+      const simpleMap: Record<string, string> = {
+        'dell': 'Dell', 'hp': 'HP', 'lenovo': 'Lenovo',
+        'synology': 'Synology', 'tplink': 'TP-Link', 'tp-link': 'TP-Link',
       }
-      return brandMap[match[1]] ?? match[1]
+      return simpleMap[simpleMatch[1]] ?? simpleMatch[1]
+    }
+    // icons8 (microsoft, acronis, canon printer icon)
+    const icons8Match = imageUrl.match(/icons8\.com\/[^/]+\/\d+\/([^.]+)\.png/)
+    if (icons8Match) {
+      const icons8Map: Record<string, string> = {
+        'microsoft': 'Microsoft', 'acronis': 'Acronis', 'print': 'Canon',
+      }
+      return icons8Map[icons8Match[1]] ?? icons8Match[1]
+    }
+    // icon.horse (crowdstrike)
+    const horseMatch = imageUrl.match(/icon\.horse\/icon\/([^.]+)\.com/)
+    if (horseMatch) {
+      const horseMap: Record<string, string> = { 'crowdstrike': 'CrowdStrike' }
+      return horseMap[horseMatch[1]] ?? horseMatch[1]
     }
   }
   if (sku) {
     const prefix = sku.split('-')[0].toUpperCase()
     const skuBrandMap: Record<string, string> = {
-      'ACR': 'Acronis',
-      'CRW': 'CrowdStrike',
-      'CRD': 'CrowdStrike',
-      'CWD': 'CrowdStrike',
-      'MST': 'Microsoft',
+      'ACR': 'Acronis', 'CRW': 'CrowdStrike', 'CRD': 'CrowdStrike',
+      'CWD': 'CrowdStrike', 'MST': 'Microsoft',
     }
     if (skuBrandMap[prefix]) return skuBrandMap[prefix]
   }
@@ -250,11 +261,11 @@ export default function ProductsPage() {
 }
 
 const SKU_LOGO: Record<string, string> = {
-  ACR: 'https://logo.clearbit.com/acronis.com',
-  CRW: 'https://logo.clearbit.com/crowdstrike.com',
-  CRD: 'https://logo.clearbit.com/crowdstrike.com',
-  CWD: 'https://logo.clearbit.com/crowdstrike.com',
-  MST: 'https://logo.clearbit.com/microsoft.com',
+  ACR: 'https://img.icons8.com/color/96/acronis.png',
+  CRW: 'https://icon.horse/icon/crowdstrike.com',
+  CRD: 'https://icon.horse/icon/crowdstrike.com',
+  CWD: 'https://icon.horse/icon/crowdstrike.com',
+  MST: 'https://img.icons8.com/color/96/microsoft.png',
 }
 
 function getLogoUrl(product: any): string {

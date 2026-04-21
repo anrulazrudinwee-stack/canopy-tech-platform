@@ -150,7 +150,13 @@ async function main() {
         }).filter(p => p && p > 0)
         const priceTexts = priceEls.map(el => el.textContent.trim()).filter(Boolean)
 
-        if (name) results.push({ name, prices, priceTexts })
+        // Extract product image
+        const imgEl  = card.querySelector('img')
+        let imageUrl = imgEl?.src || imgEl?.getAttribute('data-src') || imgEl?.getAttribute('data-lazy-src') || ''
+        // Skip tiny placeholder/base64 images
+        if (imageUrl.startsWith('data:') || imageUrl.length < 20) imageUrl = ''
+
+        if (name) results.push({ name, prices, priceTexts, imageUrl })
       })
       return results
     })
@@ -188,7 +194,7 @@ async function main() {
         price_sgd:         srpPrice || resellerPrice,
         markup_percent:    0,
         stock_qty:         50,
-        image_url:         'https://logo.clearbit.com/tp-link.com',
+        image_url:         p.imageUrl || 'https://cdn.simpleicons.org/tplink',
         specs:             null,
       }
     })

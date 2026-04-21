@@ -33,7 +33,7 @@ const PRODUCTS = [
     description: 'Compact business desktop with Intel Core i5-12500T, 8GB DDR4, 256GB SSD, Windows 11 Pro. Ideal for everyday office productivity with a small footprint.',
     price_usd: 749,
     partner_usd: 620,
-    image_url: 'https://logo.clearbit.com/dell.com',
+    image_url: 'https://cdn.simpleicons.org/dell',
     stock_qty: 50,
     specs: {
       'Processor': 'Intel Core i5-12500T (6-Core, 18MB Cache, up to 4.4GHz)',
@@ -61,7 +61,7 @@ const PRODUCTS = [
     description: 'Mid-range tower desktop with Intel Core i7-12700, 16GB DDR4, 512GB NVMe SSD, Windows 11 Pro. Expandable, reliable, and built for demanding workloads.',
     price_usd: 1149,
     partner_usd: 950,
-    image_url: 'https://logo.clearbit.com/dell.com',
+    image_url: 'https://cdn.simpleicons.org/dell',
     stock_qty: 30,
     specs: {
       'Processor': 'Intel Core i7-12700 (12-Core, 25MB Cache, up to 4.9GHz)',
@@ -91,7 +91,7 @@ const PRODUCTS = [
     description: 'Enterprise-grade compact desktop with Intel Core i5-12500, 16GB DDR5, 256GB SSD, Windows 11 Pro. HP Wolf Security built-in for hardware-level protection.',
     price_usd: 899,
     partner_usd: 745,
-    image_url: 'https://logo.clearbit.com/hp.com',
+    image_url: 'https://cdn.simpleicons.org/hp',
     stock_qty: 40,
     specs: {
       'Processor': 'Intel Core i5-12500 (6-Core, 18MB Cache, up to 4.6GHz)',
@@ -119,7 +119,7 @@ const PRODUCTS = [
     description: 'Affordable business microtower with Intel Core i3-12100, 8GB DDR4, 256GB SSD, Windows 11 Pro. A cost-effective entry point for small business deployments.',
     price_usd: 599,
     partner_usd: 495,
-    image_url: 'https://logo.clearbit.com/hp.com',
+    image_url: 'https://cdn.simpleicons.org/hp',
     stock_qty: 60,
     specs: {
       'Processor': 'Intel Core i3-12100 (4-Core, 12MB Cache, up to 4.3GHz)',
@@ -148,7 +148,7 @@ const PRODUCTS = [
     description: 'Slim desktop with Intel Core i5-13400, 16GB DDR4, 512GB SSD, Windows 11 Pro. Engineered for reliability with ThinkShield security and tool-free serviceability.',
     price_usd: 849,
     partner_usd: 700,
-    image_url: 'https://logo.clearbit.com/lenovo.com',
+    image_url: 'https://cdn.simpleicons.org/lenovo',
     stock_qty: 35,
     specs: {
       'Processor': 'Intel Core i5-13400 (10-Core, 20MB Cache, up to 4.6GHz)',
@@ -177,7 +177,7 @@ const PRODUCTS = [
     description: 'Ultra-compact enterprise desktop with Intel Core i7-12700T, 16GB DDR5, 512GB NVMe, Windows 11 Pro. 1-litre form factor, perfect for space-constrained deployments.',
     price_usd: 1099,
     partner_usd: 910,
-    image_url: 'https://logo.clearbit.com/lenovo.com',
+    image_url: 'https://cdn.simpleicons.org/lenovo',
     stock_qty: 25,
     specs: {
       'Processor': 'Intel Core i7-12700T (12-Core, 25MB Cache, up to 4.7GHz)',
@@ -208,7 +208,7 @@ const PRODUCTS = [
     description: '15.6" FHD business laptop with Intel Core i5-1345U, 16GB DDR4, 512GB SSD, Windows 11 Pro. Built for professionals with long battery life and robust durability.',
     price_usd: 1099,
     partner_usd: 910,
-    image_url: 'https://logo.clearbit.com/dell.com',
+    image_url: 'https://cdn.simpleicons.org/dell',
     stock_qty: 45,
     specs: {
       'Processor': 'Intel Core i5-1345U (10-Core, 12MB Cache, up to 4.7GHz)',
@@ -237,7 +237,7 @@ const PRODUCTS = [
     description: '14" FHD+ premium laptop with Intel Core i7-1365U, 16GB LPDDR5, 512GB SSD, Windows 11 Pro. Ultra-light at 1.26kg with up to 18 hours battery and built-in AI features.',
     price_usd: 1599,
     partner_usd: 1320,
-    image_url: 'https://logo.clearbit.com/dell.com',
+    image_url: 'https://cdn.simpleicons.org/dell',
     stock_qty: 30,
     specs: {
       'Processor': 'Intel Core i7-1365U (10-Core, 12MB Cache, up to 5.2GHz)',
@@ -266,7 +266,7 @@ const PRODUCTS = [
     description: '14" WUXGA laptop with Intel Core i5-1335U, 16GB DDR5, 512GB SSD, Windows 11 Pro. HP Wolf Security, Wi-Fi 6E, and a stunning IPS display for the modern enterprise.',
     price_usd: 1249,
     partner_usd: 1035,
-    image_url: 'https://logo.clearbit.com/hp.com',
+    image_url: 'https://cdn.simpleicons.org/hp',
     stock_qty: 40,
     specs: {
       'Processor': 'Intel Core i5-1335U (10-Core, 12MB Cache, up to 4.6GHz)',
@@ -295,7 +295,7 @@ const PRODUCTS = [
     description: '15.6" FHD laptop with Intel Core i5-1335U, 8GB DDR4, 256GB SSD, Windows 11 Pro. A dependable and affordable business laptop for everyday professional use.',
     price_usd: 849,
     partner_usd: 700,
-    image_url: 'https://logo.clearbit.com/hp.com',
+    image_url: 'https://cdn.simpleicons.org/hp',
     stock_qty: 55,
     specs: {
       'Processor': 'Intel Core i5-1335U (10-Core, 12MB Cache, up to 4.6GHz)',
@@ -324,7 +324,7 @@ const PRODUCTS = [
     description: '14" FHD IPS laptop with AMD Ryzen 5 PRO 7530U, 16GB DDR4, 512GB SSD, Windows 11 Pro. Military-grade durability, full-size keyboard, and wide port selection.',
     price_usd: 999,
     partner_usd: 825,
-    image_url: 'https://logo.clearbit.com/lenovo.com',
+    image_url: 'https://cdn.simpleicons.org/lenovo',
     stock_qty: 40,
     specs: {
       'Processor': 'AMD Ryzen 5 PRO 7530U (6-Core, 16MB Cache, up to 4.5GHz)',
@@ -353,7 +353,7 @@ const PRODUCTS = [
     description: '14" 2.8K OLED flagship business laptop with Intel Core i7-1365U, 32GB LPDDR5x, 1TB SSD, Windows 11 Pro. Premium build, ultra-thin at 1.23kg, and all-day battery.',
     price_usd: 1799,
     partner_usd: 1490,
-    image_url: 'https://logo.clearbit.com/lenovo.com',
+    image_url: 'https://cdn.simpleicons.org/lenovo',
     stock_qty: 20,
     specs: {
       'Processor': 'Intel Core i7-1365U (10-Core, 12MB Cache, up to 5.2GHz)',
@@ -385,7 +385,7 @@ const PRODUCTS = [
     description: 'Entry-level 2-bay NAS with Realtek RTD1619B quad-core 1.7GHz, 2GB RAM, 1GbE. Perfect for home office and SOHO file sharing, backup, and media streaming.',
     price_usd: 299,
     partner_usd: 248,
-    image_url: 'https://logo.clearbit.com/synology.com',
+    image_url: 'https://cdn.simpleicons.org/synology',
     stock_qty: 25,
     specs: {
       'Processor': 'Realtek RTD1619B Quad-Core 1.7GHz',
@@ -414,7 +414,7 @@ const PRODUCTS = [
     description: '4-bay NAS with Intel Celeron J4125 quad-core, 2GB DDR4 (expandable to 6GB), 2x GbE. Ideal for small business centralised storage, backup, and collaboration.',
     price_usd: 549,
     partner_usd: 455,
-    image_url: 'https://logo.clearbit.com/synology.com',
+    image_url: 'https://cdn.simpleicons.org/synology',
     stock_qty: 20,
     specs: {
       'Processor': 'Intel Celeron J4125 Quad-Core 2.0GHz (burst 2.7GHz)',
@@ -443,7 +443,7 @@ const PRODUCTS = [
     description: '4-bay SMB NAS with AMD Ryzen R1600 dual-core, 4GB ECC DDR4 (expandable to 32GB), 2x GbE + 2x M.2 NVMe slots. Designed for growing teams needing reliable shared storage.',
     price_usd: 699,
     partner_usd: 579,
-    image_url: 'https://logo.clearbit.com/synology.com',
+    image_url: 'https://cdn.simpleicons.org/synology',
     stock_qty: 15,
     specs: {
       'Processor': 'AMD Ryzen R1600 Dual-Core 2.6GHz (burst 3.1GHz)',
@@ -473,7 +473,7 @@ const PRODUCTS = [
     description: '5-bay NAS with AMD Ryzen R1600, 8GB DDR4 ECC (expandable to 32GB), 4x GbE, 2x M.2 NVMe slots. Expandable to 15 drives with DX517 expansion units.',
     price_usd: 899,
     partner_usd: 745,
-    image_url: 'https://logo.clearbit.com/synology.com',
+    image_url: 'https://cdn.simpleicons.org/synology',
     stock_qty: 12,
     specs: {
       'Processor': 'AMD Ryzen R1600 Dual-Core 2.6GHz (burst 3.1GHz)',
@@ -504,7 +504,7 @@ const PRODUCTS = [
     description: '8-bay high-performance NAS with AMD Ryzen V1780B quad-core, 8GB DDR4 ECC (expandable to 32GB), 2x 10GbE + 2x GbE. Built for enterprise-grade performance and scalability.',
     price_usd: 1699,
     partner_usd: 1409,
-    image_url: 'https://logo.clearbit.com/synology.com',
+    image_url: 'https://cdn.simpleicons.org/synology',
     stock_qty: 8,
     specs: {
       'Processor': 'AMD Ryzen V1780B Quad-Core 3.35GHz',
@@ -535,7 +535,7 @@ const PRODUCTS = [
     description: '12-bay 2U rackmount NAS with AMD Ryzen V1500B quad-core, 4GB DDR4 ECC (expandable to 16GB), 4x GbE, 2x M.2 NVMe. Ideal for data centres and server room deployments.',
     price_usd: 1399,
     partner_usd: 1160,
-    image_url: 'https://logo.clearbit.com/synology.com',
+    image_url: 'https://cdn.simpleicons.org/synology',
     stock_qty: 10,
     specs: {
       'Processor': 'AMD Ryzen V1500B Quad-Core 2.2GHz',

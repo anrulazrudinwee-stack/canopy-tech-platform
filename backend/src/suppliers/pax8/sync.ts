@@ -36,9 +36,9 @@ const SEARCHES: { productName?: string; vendorName?: string }[] = [
 ]
 
 const VENDOR_LOGOS: Record<string, string> = {
-  Microsoft:   'https://logo.clearbit.com/microsoft.com',
-  Acronis:     'https://logo.clearbit.com/acronis.com',
-  CrowdStrike: 'https://logo.clearbit.com/crowdstrike.com',
+  Microsoft:   'https://img.icons8.com/color/96/microsoft.png',
+  Acronis:     'https://img.icons8.com/color/96/acronis.png',
+  CrowdStrike: 'https://icon.horse/icon/crowdstrike.com',
 }
 
 export async function syncPAX8Products() {
